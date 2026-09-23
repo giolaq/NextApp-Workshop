@@ -27,7 +27,10 @@ Browse screen
   - poster image URL
   - hero image URL
   - video URL
-- Use stable HTTPS sample media.
+- Use stable HTTPS clear-content MP4 URLs for the videos.
+- Do not use HLS, DASH, DRM-protected, or live streams in this iteration. Those
+  require MSE mode and a JavaScript player such as Shaka Player, hls.js, or
+  dash.js on Vega.
 - Do not fetch a remote catalog.
 
 - Display a large hero image across the upper portion of the screen.
@@ -81,14 +84,41 @@ Platform implementation
 
 - Create a shared player interface.
 - Use react-native-video for Expo TV targets.
-- Create a .kepler.tsx player implementation for Vega using
-  @amazon-devices/react-native-w3cmedia and KeplerVideoSurfaceView.
+- Create a .kepler.tsx player implementation for Vega URL-mode playback using
+  VideoPlayer and KeplerVideoSurfaceView from
+  @amazon-devices/react-native-w3cmedia.
+- Follow the Vega SDK 0.22 lifecycle: initialize the VideoPlayer after the
+  surface is created, attach the surface handle, enable autoplay, assign the
+  clear MP4 URL, and clear the surface handle and deinitialize during cleanup.
 - Add only dependencies genuinely required by each workspace.
 - Verify compatible versions against the React Native version used by each
   workspace rather than copying versions blindly.
 - Provide a simple web fallback if native playback is unavailable.
 - Do not implement captions, seeking, media sessions, or hardware media-key
   integration in this iteration.
+
+Vega media configuration
+
+- The repository uses React Native 0.72 and Vega SDK 0.22. Add
+  @amazon-devices/react-native-w3cmedia to packages/vega using the compatible
+  2.1 release documented for that SDK (Amazon's setup example uses ~2.1.80).
+- Update packages/vega/babel.config.js for W3C Media without removing the
+  existing Kepler module resolver preset:
+  - Set useTransformReactJSXExperimental: true on
+    module:metro-react-native-babel-preset.
+  - Add @babel/plugin-transform-react-jsx with runtime: automatic.
+  - Declare @babel/plugin-transform-react-jsx in packages/vega if it is not
+    already a direct dependency.
+- Add the W3C Media setup entries to packages/vega/manifest.toml under [wants]:
+  - com.amazon.mediametrics.service
+  - com.amazon.devconf.privilege.accessibility
+  - com.amazon.mediabuffer.service
+  - com.amazon.mediatransform.service
+  - com.amazon.audio.stream
+  - com.amazon.audio.control
+  - com.amazon.media.server
+  - com.amazon.media.playersession.service
+- Preserve the existing manifest package, component, and needs declarations.
 
 Suggested structure
 
@@ -125,7 +155,8 @@ Validation
 - Run Expo TV lint and TypeScript validation.
 - Run git diff --check.
 - Build the Vega debug packages.
-- Launch the Vega build and validate it with VegaProbe:
+- Launch the Vega build on the Vega Virtual Device or a connected physical Vega
+  device. Validate the interaction manually or with Appium:
   - Home loads with the first card focused.
   - Moving right updates the hero.
   - Selecting a card opens the player.
@@ -133,4 +164,4 @@ Validation
   - Returning restores a usable focus position.
 
 Report all changed files, dependencies added, checks passed, Vega build
-artifacts, VegaProbe evidence, and remaining warnings.
+artifacts, device or Appium validation evidence, and remaining warnings.

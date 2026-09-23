@@ -39,7 +39,7 @@ The prompt acts as an implementation specification. It defines:
 - Accessibility and test requirements
 - The commands and interactions that must be validated
 
-Notice the constraints as well as the requested features. The assistant should not add a remote catalog, a full navigation framework, captions, seeking, or media-session integration during this exercise.
+Notice the constraints as well as the requested features. The assistant should not add a remote catalog, a full navigation framework, adaptive HLS/DASH playback, captions, seeking, or media-session integration during this exercise.
 
 ## 7.3 Give the prompt to your coding assistant
 
@@ -83,9 +83,10 @@ Check that the implementation follows these boundaries:
 - `HomeScreen` owns the small browse/player state machine.
 - Shared browse components contain the common layout and focus behaviour.
 - `VideoPlayer.tsx` uses `react-native-video` for Expo TV targets.
-- `VideoPlayer.kepler.tsx` uses the Vega W3C media APIs and `KeplerVideoSurfaceView`.
+- `VideoPlayer.kepler.tsx` uses the Vega W3C `VideoPlayer` and `KeplerVideoSurfaceView` in URL mode with clear MP4 content, following the repository's Vega SDK 0.22 guidance.
 - `VideoPlayer.web.tsx` provides a simple browser fallback.
 - Platform-specific dependencies are added only to the workspace that needs them.
+- `packages/vega` contains the W3C media dependency, required Babel configuration, and media service declarations in `manifest.toml`.
 
 This is the same platform-resolution pattern you used for `HeaderLogo`, Lottie, and the movie list, now applied to a more substantial native feature.
 
